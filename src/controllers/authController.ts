@@ -1,0 +1,62 @@
+import type { Request, Response } from "express";
+import { db } from "../db/connection.ts";
+import { users } from "../db/schema.ts";
+import { generateToken } from "../utils/jwt.ts";
+import { hashPassword } from "../utils/password.ts";
+
+export const register = async (req: Request, res: Response) => {
+  try {
+    const { email, username, password, firstName, lastName } = req.body;
+
+    const hashedPassword = await hashPassword(password);
+
+    // Check if email or username already exists in the database
+    const existingUser = await db.query.users.findFirst({
+      where: (users, { or, eq }) =>
+        or(eq(users.email, email), eq(users.username, username)),
+    });
+
+    if (existingUser) {
+      return res.status(409).json({
+        message:
+          existingUser.email === email
+            ? "Email already registered"
+            : "Username already taken",
+      });
+    }
+
+    // create new user in the database
+    const [newUser] = await db
+      .insert(users)
+      .values({
+        email,
+        username,
+        password: hashedPassword,
+        firstName,
+        lastName,
+      })
+      .returning({
+        id: users.id,
+        email: users.email,
+        username: users.username,
+        firstName: users.firstName,
+        lastName: users.lastName,
+      });
+
+    // Generate JWT token for auto-login after registration
+    const token = await generateToken({
+      id: newUser.id,
+      email: newUser.email,
+      username: newUser.username,
+    });
+
+    res.status(201).json({
+      message: "User registered successfully",
+      user: newUser,
+      token,
+    });
+  } catch (error) {
+    console.error("Registration error:", error);
+    res.status(500).json({ message: "Failed to register user" });
+  }
+};
