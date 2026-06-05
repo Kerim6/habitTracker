@@ -1,6 +1,9 @@
 import { Router } from "express";
+import { authenticate } from "../middleware/auth.ts";
 
 const router = Router();
+
+router.use(authenticate); // Apply authentication middleware to all habit routes
 
 // Habit-specific routes
 router.get("/", (req, res) => {
