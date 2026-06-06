@@ -43,6 +43,48 @@ export const getUserHabits = async (
   }
 };
 
+export const getHabitById = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    // Query the habit with its tags using relations
+    const habitWithTags = await db.query.habits.findFirst({
+      where: and(eq(habits.id, id), eq(habits.userId, userId)),
+      with: {
+        habitTags: {
+          with: {
+            tag: true,
+          },
+        },
+        entries: {
+          orderBy: [desc(entries.createdAt)],
+          limit: 10,
+        },
+      },
+    });
+    if (!habitWithTags) {
+      return res.status(404).json({ message: "Habit not found" });
+    }
+    // Transform the data to include tags directly
+    const habit = {
+      ...habitWithTags,
+      tags: habitWithTags.habitTags.map((ht) => ht.tag),
+      habitTags: undefined, // Remove intermediate relation
+    };
+    res.json({ habit: habit });
+  } catch (error) {
+    console.error("Get habit error:", error);
+    res.status(500).json({ error: "Failed to fetch habit" });
+  }
+};
+
 export const createHabit = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { name, description, frequency, targetCount, tagIds } = req.body;

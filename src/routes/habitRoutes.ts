@@ -1,6 +1,10 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth.ts";
-import { createHabit, getUserHabits } from "../controllers/habitController.ts";
+import {
+  createHabit,
+  getUserHabits,
+  getHabitById,
+} from "../controllers/habitController.ts";
 import { validateBody } from "../middleware/validation.ts";
 import { z } from "zod";
 
@@ -18,6 +22,9 @@ const habitInsertSchema = z.object({
 
 // Get all habits for the authenticated user
 router.get("/", getUserHabits);
+
+// Get a specific habit by ID
+router.get("/:id", getHabitById);
 
 // Create a new habit
 router.post("/", validateBody(habitInsertSchema), createHabit);
