@@ -4,6 +4,45 @@ import { db } from "../db/connection.ts";
 import { habits, entries, habitTags, tags } from "../db/schema.ts";
 import { eq, and, inArray, desc } from "drizzle-orm";
 
+export const getUserHabits = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // Query habits with their tags using relations
+    const userHabitsWithTags = await db.query.habits.findMany({
+      where: eq(habits.userId, userId),
+      with: {
+        habitTags: {
+          with: {
+            tag: true,
+          },
+        },
+      },
+      orderBy: [desc(habits.createdAt)],
+    });
+
+    // Transform the data to include tags directly
+    const habitsWithTags = userHabitsWithTags.map((habit) => ({
+      ...habit,
+      tags: habit.habitTags.map((ht) => ht.tag),
+      habitTags: undefined, // Remove intermediate relation
+    }));
+
+    res.json({
+      habits: habitsWithTags,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 export const createHabit = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { name, description, frequency, targetCount, tagIds } = req.body;
