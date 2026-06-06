@@ -1,18 +1,27 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth.ts";
+import { createHabit } from "../controllers/habitController.ts";
+import { validateBody } from "../middleware/validation.ts";
+import { z } from "zod";
 
 const router = Router();
 
 router.use(authenticate); // Apply authentication middleware to all habit routes
+
+const habitInsertSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  description: z.string().optional(),
+  frequency: z.enum(["daily", "weekly", "monthly"]),
+  targetCount: z.number().int().positive().default(1),
+  tagIds: z.array(z.string().uuid()).optional(),
+});
 
 // Habit-specific routes
 router.get("/", (req, res) => {
   res.json({ message: "Get all habits" });
 });
 
-router.post("/", (req, res) => {
-  res.status(201).json({ message: "Habit created" });
-});
+router.post("/", validateBody(habitInsertSchema), createHabit);
 
 // Habit completion routes
 router.post("/:id/complete", (req, res) => {
