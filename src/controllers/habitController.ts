@@ -175,3 +175,25 @@ export const updateHabit = async (req: AuthenticatedRequest, res: Response) => {
     res.status(500).json({ error: "Failed to update habit" });
   }
 };
+
+export const deleteHabit = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const [deletedHabit] = await db
+      .delete(habits)
+      .where(and(eq(habits.id, id), eq(habits.userId, userId)))
+      .returning();
+
+    if (!deletedHabit) {
+      return res.status(404).json({ message: "Habit not found" });
+    }
+
+    res.json({ message: "Habit deleted successfully" });
+  } catch (error) {}
+};

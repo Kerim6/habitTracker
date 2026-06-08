@@ -5,6 +5,7 @@ import {
   getUserHabits,
   getHabitById,
   updateHabit,
+  deleteHabit,
 } from "../controllers/habitController.ts";
 import { validateBody, validateParams } from "../middleware/validation.ts";
 import { z } from "zod";
@@ -54,13 +55,7 @@ router.put(
   updateHabit,
 );
 
-// Habit completion routes
-router.post("/:id/complete", (req, res) => {
-  res.json({ message: `Mark habit ${req.params.id} complete` });
-});
-
-router.get("/:id/stats", (req, res) => {
-  res.json({ message: `Get stats for habit ${req.params.id}` });
-});
+// Delete a habit
+router.delete("/:id", validateParams(uuidSchema), deleteHabit);
 
 export default router;
