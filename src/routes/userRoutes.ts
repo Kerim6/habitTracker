@@ -1,14 +1,13 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth.ts";
+import { getAllUsers } from "../controllers/userController.ts";
 
 const router = Router();
 
 router.use(authenticate); // Apply authentication middleware to all user routes
 
 // Routes are relative to where router is mounted
-router.get("/", (req, res) => {
-  res.json({ message: "Get all users" });
-});
+router.get("/", getAllUsers);
 
 router.get("/:id", (req, res) => {
   res.json({ message: `Get user ${req.params.id}` });
