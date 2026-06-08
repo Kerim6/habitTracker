@@ -21,3 +21,27 @@ export const getAllUsers = async (req: AuthenticatedRequest, res: Response) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+export const getProfile = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const getUser = await db
+      .select({
+        email: users.email,
+        username: users.username,
+        firstName: users.firstName,
+        lastName: users.lastName,
+      })
+      .from(users)
+      .where(eq(users.id, userId));
+
+    res.json({ getUser });
+  } catch (error) {
+    return res.status(500).json({ error, message: "Internal Server Error" });
+  }
+};
