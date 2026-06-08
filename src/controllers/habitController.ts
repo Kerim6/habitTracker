@@ -123,3 +123,55 @@ export const createHabit = async (req: AuthenticatedRequest, res: Response) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+export const updateHabit = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { name, description, frequency, targetCount, isActive, tagIds } =
+      req.body;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    // update the habit
+    const result = await db.transaction(async (tx) => {
+      const [updatedHabit] = await tx
+        .update(habits)
+        .set({
+          name,
+          description,
+          frequency,
+          targetCount,
+          isActive,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(habits.id, id), eq(habits.userId, userId)))
+        .returning();
+
+      if (!updatedHabit) {
+        return res.status(404).json({ message: "Habit not found" });
+      }
+
+      // if tags provided
+      if (tagIds !== undefined) {
+        // remove existing tag
+        await tx.delete(habitTags).where(eq(habitTags.habitId, id));
+
+        // add new tags
+        if (tagIds.length > 0) {
+          const habitTagValues = tagIds.map((tagId: string) => ({
+            habitId: id,
+            tagId,
+          }));
+          await tx.insert(habitTags).values(habitTagValues);
+        }
+      }
+      return updatedHabit;
+    }); // end of the tx
+    res.json({ message: "Habit updated succussfully", habit: result });
+  } catch (error) {
+    console.error("Update habit error:", error);
+    res.status(500).json({ error: "Failed to update habit" });
+  }
+};
