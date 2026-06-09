@@ -1,7 +1,7 @@
 import type { Response } from "express";
 import type { AuthenticatedRequest } from "../middleware/auth.ts";
 import { db } from "../db/connection.ts";
-import { users } from "../db/schema.ts";
+import { users, type User } from "../db/schema.ts";
 import { eq, and, desc } from "drizzle-orm";
 
 export const getAllUsers = async (req: AuthenticatedRequest, res: Response) => {
@@ -43,5 +43,43 @@ export const getProfile = async (req: AuthenticatedRequest, res: Response) => {
     res.json({ getUser });
   } catch (error) {
     return res.status(500).json({ error, message: "Internal Server Error" });
+  }
+};
+
+export const updateProfile = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  try {
+    const userId = req.user?.id;
+    const { email, username, firstName, lastName } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const updatedProfile = await db
+      .update(users)
+      .set({
+        email,
+        username,
+        firstName,
+        lastName,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning({
+        id: users.id,
+        email: users.email,
+        username: users.username,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        updatedAt: users.updatedAt,
+      });
+
+    res.json({ message: "Profile updated successfully", user: updatedProfile });
+  } catch (error) {
+    console.error("Update profile error", error);
+    res.status(500).json({ error: "Failed to update profile" });
   }
 };
