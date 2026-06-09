@@ -1,8 +1,10 @@
 import type { Response } from "express";
 import type { AuthenticatedRequest } from "../middleware/auth.ts";
 import { db } from "../db/connection.ts";
-import { users, type User } from "../db/schema.ts";
+import { users } from "../db/schema.ts";
 import { eq, and, desc } from "drizzle-orm";
+import bcrypt from "bcrypt";
+import env from "../../env.ts";
 
 export const getAllUsers = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -81,5 +83,49 @@ export const updateProfile = async (
   } catch (error) {
     console.error("Update profile error", error);
     res.status(500).json({ error: "Failed to update profile" });
+  }
+};
+
+export const changePassword = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  try {
+    const userId = req.user?.id;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const validateCurrentPassword = await bcrypt.compare(
+      currentPassword,
+      user.password,
+    );
+
+    if (!validateCurrentPassword) {
+      return res.status(400).json({ message: "Current password is incorrect" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, env.BCRYPT_ROUNDS);
+
+    await db
+      .update(users)
+      .set({
+        password: hashedPassword,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+
+    res.json({ message: "Password changed successfully" });
+  } catch (error) {
+    console.error(error, "Faild to change password");
+    res.status(500).json({ message: "Faild to update the password" });
   }
 };
