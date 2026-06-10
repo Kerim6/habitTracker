@@ -32,3 +32,13 @@ export const createTag = async (req: AuthenticatedRequest, res: Response) => {
     return res.status(500).json({ error: "Failed to create tag" });
   }
 };
+
+export const getAllTags = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const result = await db.select().from(tags).orderBy(tags.name);
+
+    res.json({ tags: result });
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to get all tags" });
+  }
+};
