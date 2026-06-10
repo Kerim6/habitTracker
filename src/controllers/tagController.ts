@@ -1,7 +1,7 @@
 import type { Response } from "express";
 import type { AuthenticatedRequest } from "../middleware/auth.ts";
 import { db } from "../db/connection.ts";
-import { tags } from "../db/schema.ts";
+import { habitTags, tags } from "../db/schema.ts";
 import { eq, and, desc, inArray } from "drizzle-orm";
 
 export const createTag = async (req: AuthenticatedRequest, res: Response) => {
@@ -40,5 +40,44 @@ export const getAllTags = async (req: AuthenticatedRequest, res: Response) => {
     res.json({ tags: result });
   } catch (error) {
     return res.status(500).json({ message: "Failed to get all tags" });
+  }
+};
+
+export const getTagById = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const existTag = await db.query.tags.findFirst({
+      where: eq(tags.id, id),
+      with: {
+        habitTags: {
+          with: {
+            habit: {
+              columns: {
+                id: true,
+                name: true,
+                description: true,
+                isActive: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    if (!existTag) {
+      return res.status(404).json({ message: "Tag with this id is not exist" });
+    }
+
+    // transform the data
+    const tagsWithHabits = {
+      ...existTag,
+      habit: existTag.habitTags.map((ht) => ht.habit),
+      habitTags: undefined,
+    };
+
+    res.json({ tag: tagsWithHabits });
+  } catch (error) {
+    console.error("Get tag error:", error);
+    res.status(500).json({ error: "Failed to fetch tag" });
   }
 };
