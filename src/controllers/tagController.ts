@@ -81,3 +81,40 @@ export const getTagById = async (req: AuthenticatedRequest, res: Response) => {
     res.status(500).json({ error: "Failed to fetch tag" });
   }
 };
+
+export const updateTag = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { name, color } = req.body;
+
+    if (name) {
+      const getTag = await db.query.tags.findFirst({
+        where: eq(tags.name, name),
+      });
+      if (getTag && getTag.id !== id) {
+        return res
+          .status(404)
+          .json({ message: "Tag with this name already exists" });
+      }
+    }
+
+    const updateTheTag = await db
+      .update(tags)
+      .set({
+        name: name,
+        color: color,
+        updatedAt: new Date(),
+      })
+      .where(eq(tags.id, id))
+      .returning();
+
+    if (!updateTheTag) {
+      return res.status(404).json({ message: "Tag is not found" });
+    }
+
+    res.json({ message: "Tag updated successefully", tag: updateTheTag });
+  } catch (error) {
+    console.error("update tag error", error);
+    return res.status(500).json({ message: "Failed to update tag" });
+  }
+};

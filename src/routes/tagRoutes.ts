@@ -3,6 +3,7 @@ import {
   createTag,
   getAllTags,
   getTagById,
+  updateTag,
 } from "../controllers/tagController.ts";
 import { authenticate } from "../middleware/auth.ts";
 import { validateBody, validateParams } from "../middleware/validation.ts";
@@ -20,5 +21,11 @@ const uuidSchema = z.object({
 router.post("/", validateBody(TagInsertSchema), createTag);
 router.get("/", getAllTags);
 router.get("/:id", validateParams(uuidSchema), getTagById);
+router.put(
+  "/:id",
+  validateParams(uuidSchema),
+  validateBody(TagInsertSchema),
+  updateTag,
+);
 
 export default router;
