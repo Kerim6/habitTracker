@@ -118,3 +118,24 @@ export const updateTag = async (req: AuthenticatedRequest, res: Response) => {
     return res.status(500).json({ message: "Failed to update tag" });
   }
 };
+
+export const deleteTag = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const findTag = await db.query.tags.findFirst({
+      where: eq(tags.id, id),
+    });
+
+    if (!findTag) {
+      return res.status(404).json({ message: "Tag is not found" });
+    }
+
+    const deletedTag = await db.delete(tags).where(eq(tags.id, id));
+
+    res.json({ message: "Tag is deleted successfully" });
+  } catch (error) {
+    console.error("Deleting tag error", error);
+    res.json({ message: "Failed to delete tag" });
+  }
+};

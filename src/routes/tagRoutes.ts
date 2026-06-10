@@ -4,6 +4,7 @@ import {
   getAllTags,
   getTagById,
   updateTag,
+  deleteTag,
 } from "../controllers/tagController.ts";
 import { authenticate } from "../middleware/auth.ts";
 import { validateBody, validateParams } from "../middleware/validation.ts";
@@ -27,5 +28,6 @@ router.put(
   validateBody(TagInsertSchema),
   updateTag,
 );
+router.delete("/:id", validateParams(uuidSchema), deleteTag);
 
 export default router;
