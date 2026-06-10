@@ -2,6 +2,7 @@ import express from "express";
 import authRoutes from "./routes/authRoutes.ts";
 import userRoutes from "./routes/userRoutes.ts";
 import habitRoutes from "./routes/habitRoutes.ts";
+import tagRoutes from "./routes/tagRoutes.ts";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
@@ -34,6 +35,7 @@ app.get("/health", (req, res) => {
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/habits", habitRoutes);
+app.use("/tags", tagRoutes);
 
 export { app };
 export default app;
