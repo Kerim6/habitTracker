@@ -1,10 +1,11 @@
 import { Router } from "express";
-import { authenticate } from "../middleware/auth.ts";
+import { authenticate, authorize } from "../middleware/auth.ts";
 import {
   getAllUsers,
   getProfile,
   updateProfile,
   changePassword,
+  deleteUser,
 } from "../controllers/userController.ts";
 import { validateBody, validateParams } from "../middleware/validation.ts";
 import { z } from "zod";
@@ -29,19 +30,36 @@ const ChangePasswordSchema = z.object({
     ),
 });
 
+const uuidSchema = z.object({
+  id: z.uuid(),
+});
+
 router.use(authenticate); // Apply authentication middleware to all user routes
 
 // Routes are relative to where router is mounted
-router.get("/", getAllUsers);
+router.get("/", authorize("admin"), getAllUsers);
 
-router.get("/profile", getProfile);
+router.get("/profile", authorize("user"), getProfile);
 
-router.put("/profile", validateBody(UserUpdateSchema), updateProfile);
+router.put(
+  "/profile",
+  authorize("user"),
+  validateBody(UserUpdateSchema),
+  updateProfile,
+);
 
 router.post(
   "/change-password",
+  authorize("admin", "user"),
   validateBody(ChangePasswordSchema),
   changePassword,
+);
+
+router.delete(
+  "/:id",
+  validateParams(uuidSchema),
+  authorize("admin"),
+  deleteUser,
 );
 
 export default router;

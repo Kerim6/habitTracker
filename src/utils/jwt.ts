@@ -1,11 +1,13 @@
 import { SignJWT, jwtVerify } from "jose";
 import { createSecretKey } from "crypto";
 import env from "../../env.ts";
+import type { Role } from "../db/schema.ts";
 
 export interface JwtPayload extends Record<string, unknown> {
   id: string;
   email: string;
   username: string;
+  role: Role;
 }
 
 export const generateToken = async (payload: JwtPayload): Promise<string> => {
@@ -28,5 +30,6 @@ export const verifyToken = async (token: string): Promise<JwtPayload> => {
     id: payload.id as string,
     email: payload.email as string,
     username: payload.username as string,
+    role: payload.role as Role,
   };
 };

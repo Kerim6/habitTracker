@@ -7,9 +7,12 @@ import {
   boolean,
   integer,
   jsonb,
+  pgEnum,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+
+export const rolesEnum = pgEnum("roles", ["user", "admin"]);
 
 // User table definition
 export const users = pgTable("users", {
@@ -19,6 +22,7 @@ export const users = pgTable("users", {
   password: varchar("password", { length: 255 }).notNull(),
   firstName: varchar("first_name", { length: 50 }),
   lastName: varchar("last_name", { length: 50 }),
+  role: rolesEnum().default("user").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -126,6 +130,8 @@ export type NewTag = typeof tags.$inferInsert;
 
 export type HabitTag = typeof habitTags.$inferSelect;
 export type NewHabitTag = typeof habitTags.$inferInsert;
+
+export type Role = (typeof rolesEnum.enumValues)[number];
 
 // Zod schemas for validation
 export const UserInsertSchema = createInsertSchema(users);

@@ -129,3 +129,29 @@ export const changePassword = async (
     res.status(500).json({ message: "Faild to update the password" });
   }
 };
+
+export const deleteUser = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.params.id;
+
+    if (req.user?.id === userId) {
+      return res
+        .status(401)
+        .json({ message: "Admin can't delete his or her account" });
+    }
+
+    const deletedUser = await db
+      .delete(users)
+      .where(eq(users.id, userId))
+      .returning();
+
+    if (deletedUser.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.error("Deleting user error", error);
+    return res.status(500).json({ message: "Failed deleting user" });
+  }
+};
