@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticate } from "../middleware/auth.ts";
+import { authenticate, authorize } from "../middleware/auth.ts";
 import {
   createHabit,
   getUserHabits,
@@ -39,7 +39,7 @@ const updateHabitSchema = z.object({
 });
 
 // Get all habits for the authenticated user
-router.get("/", getUserHabits);
+router.get("/", authorize("admin"), getUserHabits);
 
 // Get a specific habit by ID
 router.get("/:id", validateParams(uuidSchema), getHabitById);

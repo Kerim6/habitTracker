@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { verifyToken, type JwtPayload } from "../utils/jwt.ts";
+import type { Role } from "../db/schema.ts";
 
 export interface AuthenticatedRequest<
   P = any,
@@ -28,4 +29,29 @@ export const authenticate = async (
   } catch (error) {
     res.status(403).json({ error: "Invalid or expired token" });
   }
+};
+
+export const authorize = (...alowedRoles: Role[]) => {
+  const normalizedRoles = alowedRoles.map((role) => role.toLowerCase());
+
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const userRole = req.user?.role;
+
+    if (!userRole) {
+      return res.status(403).json({ message: "Role missing" });
+    }
+
+    if (
+      normalizedRoles.length > 0 &&
+      !normalizedRoles.includes(userRole.toLowerCase())
+    ) {
+      return res.status(403).json({ message: "Forbbiden" });
+    }
+
+    next();
+  };
 };
