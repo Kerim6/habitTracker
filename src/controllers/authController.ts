@@ -99,6 +99,7 @@ export const login = async (req: Request, res: Response) => {
         username: user.username,
         firstName: user.firstName,
         lastName: user.lastName,
+        role: user.role,
       },
       token,
     });
