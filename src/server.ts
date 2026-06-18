@@ -7,6 +7,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import { env, isTestEnv } from "../env.ts";
+import { errorHandler } from "./middleware/errorHandler.ts";
 
 const app = express();
 
@@ -36,6 +37,8 @@ app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/habits", habitRoutes);
 app.use("/tags", tagRoutes);
+
+app.use(errorHandler);
 
 export { app };
 export default app;
