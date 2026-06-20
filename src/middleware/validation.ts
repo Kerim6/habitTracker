@@ -13,14 +13,7 @@ export const validateBody = (schema: ZodSchema) => {
 
       next(); // Validation passed, continue
     } catch (error) {
-      if (error instanceof ZodError) {
-        return res.status(400).json({
-          errors: error.issues.map((issue) => ({
-            path: issue.path,
-            message: issue.message,
-          })),
-        });
-      }
+      next(error);
       return res.status(500).json({
         message: "Internal server error",
       });
@@ -35,15 +28,6 @@ export const validateParams = (schema: ZodSchema) => {
       schema.parse(req.params);
       next();
     } catch (error) {
-      if (error instanceof ZodError) {
-        return res.status(400).json({
-          error: "Invalid parameters",
-          details: error.issues.map((issue) => ({
-            path: issue.path,
-            message: issue.message,
-          })),
-        });
-      }
       next(error);
     }
   };
@@ -56,15 +40,6 @@ export const validateQuery = (schema: ZodSchema) => {
       schema.parse(req.query);
       next();
     } catch (error) {
-      if (error instanceof ZodError) {
-        return res.status(400).json({
-          error: "Invalid query parameters",
-          details: error.issues.map((issue) => ({
-            path: issue.path,
-            message: issue.message,
-          })),
-        });
-      }
       next(error);
     }
   };
