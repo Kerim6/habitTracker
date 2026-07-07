@@ -1,5 +1,11 @@
-import { db } from "../src/db/connection.ts";
-import { users, habits, habitTags, entries, tags } from "../src/db/schema.ts";
+import { db } from "../../src/db/connection.ts";
+import {
+  users,
+  habits,
+  habitTags,
+  entries,
+  tags,
+} from "../../src/db/schema.ts";
 import { sql } from "drizzle-orm";
 import { execSync } from "child_process";
 
